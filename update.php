@@ -7,7 +7,7 @@
 	$pmclass = 'pm_monopay';
 	$folders = array('jshoppingorder', 'jshoppingadmin');
 	$version = '2.0.0';
-	$cache = '{"creationDate":"6.11.2023","author":"Hvaekar","authorEmail":"hvaekar@gmail.com","authorUrl":"","version":"'.$version.'"}';
+	$cache = '{"creationDate":"6.11.2023","author":"Hvaekar","authorEmail":"hvaekar@gmail.com","authorUrl":"https://github.com/Hvaekar","version":"'.$version.'"}';
 	$params = '{"secret":"","currency":"UAH","transaction_end_status":"0","transaction_pending_status":"0","transaction_failed_status":"0","return_check":"0","qr_id":"","return_money":"0"}';
 
 	$db = \JFactory::getDbo();
