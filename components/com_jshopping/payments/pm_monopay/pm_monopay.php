@@ -47,22 +47,37 @@ class pm_monopay extends PaymentRoot
             return $status;
         } else {
             $transactions = $order->getListTransactions();
-            $status_data = '';
+            $invoice_id = '';
             foreach ($transactions[0]->data as $trx_data) {
-                if ($trx_data->key == "status") {
-                    $status_data = $trx_data->value;
+                if ($trx_data->key == "invoiceId") {
+                    $invoice_id = $trx_data->value;
                 }
             }
-            $status = $this->getStatus($pmconfigs, $status_data, $callback['failureReason']);
-            $status[] = $transaction;
-            $status[] = array(_MONOPAY_SUCCESS_SECOND_TIME => _MONOPAY_SUCCESS_SECOND_TIME_YES);
+            $current_status = $this->getCurrentStatus($invoice_id, $pmconfigs['secret']);
+            $status = $this->getStatus($pmconfigs, $current_status->status, $current_status->failureReason);
+            $status[] = $invoice_id;
+            $status[] = array(_MONOPAY_SUCCESS_SECOND_TIME => $current_status->status);
             return $status;
         }
     }
 
+    private function getCurrentStatus($invoice_id, $secret)
+    {
+        $host = 'https://api.monobank.ua/api/merchant/invoice/status?invoiceId=' . $invoice_id;
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $host);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-type: application/json', 'X-Token: ' . $secret));
+        $result = json_decode(curl_exec($ch));
+        curl_close($ch);
+
+        return $result;
+    }
+
     function getStatus($pmconfigs, $payment_status, $failure_reason = '')
     {
-        if ($pmconfigs['return_check']) {
+        if (!$pmconfigs['return_check']) {
             $waiting = 2;
             $error = 3;
         }
@@ -71,13 +86,13 @@ class pm_monopay extends PaymentRoot
             case 'success':
                 return array(1, _MONOPAY_SUCCESS);
             case 'created':
-                return array($waiting, _MONOPAY_CREATED);
+                return array(0, _MONOPAY_CREATED);
             case 'processing':
                 return array($waiting, _MONOPAY_PROCESSING);
             case 'hold':
                 return array($error, _MONOPAY_HOLD);
             case 'failure':
-                return array($error, _MONOPAY_FAILURE . '' . $failure_reason);
+                return array($error, _MONOPAY_FAILURE . ' ' . $failure_reason);
             case 'expired':
                 return array($error, _MONOPAY_EXPIRES);
             case 'reversed':
@@ -98,9 +113,9 @@ class pm_monopay extends PaymentRoot
         $notify_url = JURI::root() . \JSHelper::SEFLink("index.php?option=com_jshopping&controller=checkout&task=step7&act=notify&js_paymentclass=" . $pm_method->payment_class . '&order_id=' . $order->order_id, 1);
 
         if ($pmconfigs['return_check']) {
-            $success_url = JURI::root() . \JSHelper::SEFLink("index.php?option=com_jshopping&controller=checkout&task=step7&act=return&js_paymentclass=" . $pm_method->payment_class . '&order_id=' . $order->order_id, 1);
-        } else {
             $success_url = JURI::root() . \JSHelper::SEFLink("index.php?option=com_jshopping&controller=checkout&task=step7&act=finish&js_paymentclass=" . $pm_method->payment_class . '&order_id=' . $order->order_id, 1);
+        } else {
+            $success_url = JURI::root() . \JSHelper::SEFLink("index.php?option=com_jshopping&controller=checkout&task=step7&act=return&js_paymentclass=" . $pm_method->payment_class . '&order_id=' . $order->order_id, 1);
         }
 
         if ($this->cancel_url_step5) {
@@ -172,12 +187,8 @@ class pm_monopay extends PaymentRoot
         $result = json_decode(curl_exec($ch));
         if ($result->errCode != '' || $result->invoiceId == '') {
             \JSHelper::saveToLog("payment.log", "Status pending. Order ID " . $order->order_id . ". " . $result->errText);
-            curl_close($ch);
-            return array(2, "Status pending. Order ID " . $order->order_id, $result->errText);
-            exit;
-        } else {
-            curl_close($ch);
         }
+        curl_close($ch);
 
         if ($result->pageUrl) {
             header('Location: ' . $result->pageUrl);

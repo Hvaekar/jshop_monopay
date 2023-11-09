@@ -10,7 +10,7 @@ define('_JSHOP_DESTINATION_PRE',"Payment order #");
 define('_JSHOP_MONOPAY_CURRENCY',"Currency");
 define('_JSHOP_MONOPAY_CURRENCY_DEFAULT',"Order currency");
 define('_JSHOP_MONOPAY_CHECK_RETURN',"Check data upon return");
-define('_JSHOP_MONOPAY_CHECK_RETURN_DESC',"'No' - the order will be redefined as 'completed' at the stage of creating an invoice (Mono payment form), the statuses will change as the payment process progresses, and when the client clicks on the 'Return to site' button, the completed page will be loaded order. 'Yes' - the order will be completed only if the payment is successful, the statuses will not change, and when you click on the 'Return to site' button, the last step of placing the order will be loaded. Transactions will be saved in any case.");
+define('_JSHOP_MONOPAY_CHECK_RETURN_DESC',"'Yes' - the order will be created as unfinished until the moment of payment confirmation, statuses will not change, returning to the site will lead to the order confirmation page. 'No' - the statuses will change starting with the process of confirmation of payment by the client in the bank, returning to the site in any case will complete the order and the client will receive the final page 'Thank you...'");
 define('_MONOPAY_SUCCESS',"Order paid.");
 define('_MONOPAY_CREATED',"The order has been created. The invoice is awaiting payment.");
 define('_MONOPAY_PROCESSING',"Order created. Awaiting payment.");
