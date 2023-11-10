@@ -18,10 +18,7 @@ class plgJshoppingAdminMonopay extends JPlugin
         $pm_configs = $pm_method->getConfigs();
         if (!$pm_configs['return_money']) return;
 
-        $invoice_id = $this->getInvoiceId($view->order);
-        if (!$invoice_id) return;
-
-        $current_status = $this->getCurrentStatus($invoice_id, $pm_configs['secret']);
+        $current_status = $this->getCurrentStatus($view->order->transaction, $pm_configs['secret']);
         if (!$current_status->errCode) {
             $final_amount = $current_status->finalAmount / 100;
         } else {
@@ -33,13 +30,12 @@ class plgJshoppingAdminMonopay extends JPlugin
 
         $order_currency = $this->getCurrency($view->order->currency_code_iso);
 
-        if ($order_currency[0]->currency_code_num != $current_status->ccy) {
+        if ($order_currency->currency_code_num != $current_status->ccy) {
             $final_amount = $final_amount * $view->order->currency_exchange;
         }
 
         if ($final_amount > 0) {
             $view->_update_status_html .= '<tr><td><label for="monopay_return">' . _JSHOP_MONOPAY_RETURN_MONEY . '</label></td> <td><input type="number" step="0.01" id="monopay_return" name="monopay_return" class="inputbox form-control" min="0" max="' . $final_amount . '" placeholder="' . _JSHOP_ENTER_SUMM . '">' . $view->order->currency_code . '</td> <td><button class="btn btn-warning" type="button" onclick="add_subtotal(' . $final_amount . ')">' . _JSHOP_ADD_ALL_SUBTOTAL . '</button></td></tr>';
-            $view->_update_status_html .= '<input type="hidden" name="monopay_invoice_id" value="' . $invoice_id . '">';
             $view->_update_status_html .= '<input type="hidden" name="monopay_final_amount" value="' . $final_amount . '">';
             $view->_update_status_html .= '<script>
                     function add_subtotal(value){
@@ -71,21 +67,7 @@ class plgJshoppingAdminMonopay extends JPlugin
         $query_where = "WHERE currency_code_iso = '" . $currency_code_iso . "'";
         $query = "SELECT * FROM `#__jshopping_currencies` $query_where";
         $db->setQuery($query);
-        return $db->loadObJectList();
-    }
-
-    private function getInvoiceId($order)
-    {
-        $transactions = $order->getListTransactions();
-        $invoiceId = '';
-
-        foreach ($transactions as $trx) {
-            if ($trx->transaction) {
-                return $trx->transaction;
-            }
-        }
-
-        return $invoiceId;
+        return $db->loadObJect();
     }
 
     private function getCurrentStatus($invoice_id, $secret)

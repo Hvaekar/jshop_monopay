@@ -46,11 +46,13 @@ class pm_monopay extends PaymentRoot
             $status[] = $transactiondata;
             return $status;
         } else {
-            $transactions = $order->getListTransactions();
-            $invoice_id = '';
-            foreach ($transactions[0]->data as $trx_data) {
-                if ($trx_data->key == "invoiceId") {
-                    $invoice_id = $trx_data->value;
+            $invoice_id = $order->transaction;
+            if (!$invoice_id) {
+                $transactions = $order->getListTransactions();
+                foreach ($transactions[0]->data as $trx_data) {
+                    if ($trx_data->key == "invoiceId") {
+                        $invoice_id = $trx_data->value;
+                    }
                 }
             }
             $current_status = $this->getCurrentStatus($invoice_id, $pmconfigs['secret']);
@@ -131,10 +133,10 @@ class pm_monopay extends PaymentRoot
         }
 
         if ($pmconfigs['currency'] != $order->currency_code_iso) {
-            $order->order_total = $order->order_total * $currency[0]->currency_value / $order->currency_exchange;
+            $order->order_total = $order->order_total * $currency->currency_value / $order->currency_exchange;
         }
 
-        $ccy = intval($currency[0]->currency_code_num);
+        $ccy = intval($currency->currency_code_num);
 
 
         $mono_args = array(
@@ -154,7 +156,7 @@ class pm_monopay extends PaymentRoot
         $basket_order = array();
         foreach ($order_items as $item) {
             if ($pmconfigs['currency'] != $order->currency_code_iso) {
-                $item->product_item_price = $item->product_item_price * $currency[0]->currency_value / $order->currency_exchange;
+                $item->product_item_price = $item->product_item_price * $currency->currency_value / $order->currency_exchange;
             }
 
             if ($item->product_attributes) {
@@ -203,7 +205,7 @@ class pm_monopay extends PaymentRoot
         $query_where = "WHERE currency_code_iso = '" . $currency_code_iso . "'";
         $query = "SELECT * FROM `#__jshopping_currencies` $query_where";
         $db->setQuery($query);
-        return $db->loadObJectList();
+        return $db->loadObJect();
     }
 
     function getUrlParams($pmconfigs)
@@ -218,12 +220,11 @@ class pm_monopay extends PaymentRoot
     }
 
     function fixOrderTotal($order)
-    {
-        $total = $order->order_total;
+    {;
         if ($order->currency_code_iso == 'HUF') {
-            $total = round($total);
+            $total = round($order->order_total);
         } else {
-            $total = number_format($total, 2, '.', '');
+            $total = number_format($order->order_total, 2, '.', '');
         }
         return $total;
     }

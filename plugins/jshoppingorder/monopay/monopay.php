@@ -16,15 +16,14 @@ class plgJshoppingOrderMonopay extends JPlugin
         JSFactory::loadExtLanguageFile("monopay");
         $host = 'https://api.monobank.ua/api/merchant/invoice/cancel';
 
-        // get main fields
-        $jinp = \JFactory::getApplication()->input;
-        $monopay_return = round(floatval($jinp->get('monopay_return')), 2);
-        $monopay_invoice_id = strval($jinp->get('monopay_invoice_id'));
-        if (!$monopay_invoice_id || !$monopay_return) return;
-
         // get order
         $order = \JSFactory::getTable('order');
         $order->load($order_id);
+
+        // get main fields
+        $jinp = \JFactory::getApplication()->input;
+        $monopay_return = round(floatval($jinp->get('monopay_return')), 2);
+        if (!$order->transaction || !$monopay_return) return;
 
         // get payment from order
         $pm_method = $order->getPayment();
@@ -33,7 +32,7 @@ class plgJshoppingOrderMonopay extends JPlugin
         if (!$pm_configs['return_money']) return;
 
         // check current status of payment
-        $current_status = $this->getCurrentStatus($monopay_invoice_id, $pm_configs['secret']);
+        $current_status = $this->getCurrentStatus($order->transaction, $pm_configs['secret']);
         if (!$current_status->errCode) {
             $final_amount = $current_status->finalAmount / 100;
         } else {
@@ -46,7 +45,7 @@ class plgJshoppingOrderMonopay extends JPlugin
 
         // final amount
         $order_currency = $this->getCurrency($order->currency_code_iso);
-        if ($order_currency[0]->currency_code_num != $current_status->ccy) {
+        if ($order_currency->currency_code_num != $current_status->ccy) {
             $final_amount = $final_amount * $order->currency_exchange;
         }
 
@@ -57,13 +56,13 @@ class plgJshoppingOrderMonopay extends JPlugin
             return;
         }
 
-        if ($order_currency[0]->currency_code_num != $current_status->ccy) {
+        if ($order_currency->currency_code_num != $current_status->ccy) {
             $monopay_return = $monopay_return / $order->currency_exchange;
         }
 
         // prepare data for request
         $return_args = array(
-            "invoiceId" => $monopay_invoice_id,
+            "invoiceId" => $order->transaction,
             "amount" => intval($monopay_return * 100),
         );
 
@@ -124,6 +123,6 @@ class plgJshoppingOrderMonopay extends JPlugin
         $query_where = "WHERE currency_code_iso = '" . $currency_code_iso . "'";
         $query = "SELECT currency_id, currency_name, currency_code, currency_code_num, currency_value FROM `#__jshopping_currencies` $query_where";
         $db->setQuery($query);
-        return $db->loadObJectList();
+        return $db->loadObJect();
     }
 }
