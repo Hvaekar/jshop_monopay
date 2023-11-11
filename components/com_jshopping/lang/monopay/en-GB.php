@@ -1,6 +1,7 @@
 <?php
 defined('_JEXEC') or die('Restricted access');
 
+define('_MONO',"mono");
 define('_JSHOP_MONOPAY_SECRET',"Token");
 define('_JSHOP_MONOPAY_QR_ID',"QR cash register ID");
 define('_JSHOP_MONOPAY_TRANSACTION_END',"Order Status for successful transactions");

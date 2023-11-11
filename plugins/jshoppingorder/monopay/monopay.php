@@ -10,7 +10,7 @@ class plgJshoppingOrderMonopay extends JPlugin
     }
 
     public function onBeforeChangeOrderStatusAdmin(
-        $order_id, $status, $status_id, $notify, $comments, $include_comment, $view_order, $prev_status, &$return
+        $order_id, $status, $status_id, $notify, &$comments, &$include_comment, $view_order, $prev_status, &$return
     )
     {
         JSFactory::loadExtLanguageFile("monopay");
@@ -82,25 +82,28 @@ class plgJshoppingOrderMonopay extends JPlugin
         } else {
             switch ($result->status) {
                 case 'success':
-                    \JFactory::getApplication()->enqueueMessage(
-                        sprintf(_JSHOP_MONOPAY_RETURN_SUCCESS, $monopay_return * $order->currency_exchange . $order->currency_code), 'success');
+                    $comment = sprintf(_JSHOP_MONOPAY_RETURN_SUCCESS, $monopay_return * $order->currency_exchange . $order->currency_code);
+                    \JFactory::getApplication()->enqueueMessage($comment, 'success');
                     break;
                 case 'processing':
-                    \JFactory::getApplication()->enqueueMessage(
-                        sprintf(_JSHOP_MONOPAY_RETURN_PROCESSING, $monopay_return * $order->currency_exchange . $order->currency_code), 'warning');
+                    $comment = sprintf(_JSHOP_MONOPAY_RETURN_PROCESSING, $monopay_return * $order->currency_exchange . $order->currency_code);
+                    \JFactory::getApplication()->enqueueMessage($comment, 'warning');
                     break;
                 case 'failure':
                     $return = 0;
-                    \JFactory::getApplication()->enqueueMessage(
-                        sprintf(_JSHOP_MONOPAY_RETURN_FAILURE, $monopay_return * $order->currency_exchange . $order->currency_code), 'danger');
+                    $comment = sprintf(_JSHOP_MONOPAY_RETURN_FAILURE, $monopay_return * $order->currency_exchange . $order->currency_code);
+                    \JFactory::getApplication()->enqueueMessage($comment, 'danger');
                     break;
                 default:
                     $return = 0;
-                    \JFactory::getApplication()->enqueueMessage(_JSHOP_MONOPAY_RETURN_UNKNOWN_ERROR, 'danger');
+                    $comment = sprintf(_JSHOP_MONOPAY_RETURN_UNKNOWN_ERROR);
+                    \JFactory::getApplication()->enqueueMessage($comment, 'danger');
                     break;
             }
         }
         curl_close($ch);
+        $comments .= _MONO.': '.$comment;
+        $include_comment = 0;
     }
 
     private function getCurrentStatus($invoice_id, $secret)

@@ -1,6 +1,7 @@
 <?php
 defined('_JEXEC') or die('Restricted access');
 
+define('_MONO',"mono");
 define('_JSHOP_MONOPAY_SECRET',"Токен");
 define('_JSHOP_MONOPAY_QR_ID',"Идентификатор QR-кассы");
 define('_JSHOP_MONOPAY_TRANSACTION_END',"Статус заказа после успешной оплаты");
