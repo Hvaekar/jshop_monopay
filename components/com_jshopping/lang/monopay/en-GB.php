@@ -31,6 +31,7 @@ define('_JSHOP_MONOPAY_RETURN_SUCCESS',"Money returned: %s");
 define('_JSHOP_MONOPAY_RETURN_PROCESSING',"Money in process of return: %s");
 define('_JSHOP_MONOPAY_RETURN_FAILURE',"Money return error: %s");
 define('_JSHOP_MONOPAY_ALERT',"Are you shure to return %s?");
+define('_JSHOP_MONOPAY_SUCCESS_BTN',"Confirm and pay");
 
 define('_JSHOP_MONOPAY_DESC_LINE1',"An application to connect Mono acquiring is submitted here: <a href='https://www.monobank.ua/e-comm'>https://www.monobank.ua/e-comm</a>");
 define('_JSHOP_MONOPAY_DESC_LINE2',"After opening access by the bank, in the personal account on the website <a href='https://web.monobank.ua/'>https://web.monobank.ua/</a> in the section 'Internet -> Acquiring Management' create a token, copy it and paste it here in the 'Token' field. Save.");

@@ -11,6 +11,8 @@ class plgJshoppingAdminMonopay extends JPlugin
 
     public function onBeforeShowOrder(&$view)
     {
+        //if($view->config->no_return_all) return;
+
         JSFactory::loadExtLanguageFile("monopay");
 
         $pm_method = $view->order->getPayment();

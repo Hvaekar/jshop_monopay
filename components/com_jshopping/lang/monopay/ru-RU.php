@@ -32,6 +32,7 @@ define('_JSHOP_MONOPAY_RETURN_PROCESSING',"Средства в процессе 
 define('_JSHOP_MONOPAY_RETURN_FAILURE',"Ошибка возврата средств: %s");
 define('_JSHOP_MONOPAY_RETURN_UNKNOWN_ERROR',"Неизвестная ошибка возврата.");
 define('_JSHOP_MONOPAY_ALERT',"Вы действительно хотите вернуть %s?");
+define('_JSHOP_MONOPAY_SUCCESS_BTN',"Подтвердить и оплатить");
 
 define('_JSHOP_MONOPAY_DESC_LINE1',"Заявка на подключение эквайринга Моно подается здесь: <a href='https://www.monobank.ua/e-comm'>https://www.monobank.ua/e-comm</a>");
 define('_JSHOP_MONOPAY_DESC_LINE2',"После открытия доступа банком, в личном кабинете на сайте <a href='https://web.monobank.ua/'>https://web.monobank.ua/</a> в разделе 'Интернет -> Управление эквайрингом' создаете токен, копируете его и вставляете здесь в поле 'Токен'. Сохраняете.");

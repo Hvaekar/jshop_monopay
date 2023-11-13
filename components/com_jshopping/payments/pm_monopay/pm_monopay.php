@@ -98,7 +98,6 @@ class pm_monopay extends PaymentRoot
             case 'expired':
                 return array($error, _MONOPAY_EXPIRES);
             case 'reversed':
-                // add status reverced in admin and login to change order status
                 return array(0, _MONOPAY_REVERCED);
             default:
                 return array(0, _MONOPAY_ERROR);
@@ -107,23 +106,23 @@ class pm_monopay extends PaymentRoot
 
     function showEndForm($pmconfigs, $order)
     {
-        $jshopConfig = \JSFactory::getConfig();
+
         \JSFactory::loadExtLanguageFile('monopay');
         $pm_method = $this->getPmMethod();
 
-        $host = "https://api.monobank.ua/api/merchant/invoice/create";
-        $notify_url = JURI::root() . \JSHelper::SEFLink("index.php?option=com_jshopping&controller=checkout&task=step7&act=notify&js_paymentclass=" . $pm_method->payment_class . '&order_id=' . $order->order_id, 1);
+        $root_utl = rtrim(JURI::root(), '/');
+        $notify_url = $root_utl . \JSHelper::SEFLink("index.php?option=com_jshopping&controller=checkout&task=step7&act=notify&js_paymentclass=" . $pm_method->payment_class . '&order_id=' . $order->order_id, 1);
 
         if ($pmconfigs['return_check']) {
-            $success_url = JURI::root() . \JSHelper::SEFLink("index.php?option=com_jshopping&controller=checkout&task=step7&act=finish&js_paymentclass=" . $pm_method->payment_class . '&order_id=' . $order->order_id, 1);
+            $success_url = $root_utl . \JSHelper::SEFLink("index.php?option=com_jshopping&controller=checkout&task=step7&act=finish&js_paymentclass=" . $pm_method->payment_class . '&order_id=' . $order->order_id, 1);
         } else {
-            $success_url = JURI::root() . \JSHelper::SEFLink("index.php?option=com_jshopping&controller=checkout&task=step7&act=return&js_paymentclass=" . $pm_method->payment_class . '&order_id=' . $order->order_id, 1);
+            $success_url = $root_utl . \JSHelper::SEFLink("index.php?option=com_jshopping&controller=checkout&task=step7&act=return&js_paymentclass=" . $pm_method->payment_class . '&order_id=' . $order->order_id, 1);
         }
 
         if ($this->cancel_url_step5) {
-            $cancel_return = JURI::root() . \JSHelper::SEFLink("index.php?option=com_jshopping&controller=checkout&task=step5", 1);
+            $cancel_return = $root_utl . \JSHelper::SEFLink("index.php?option=com_jshopping&controller=checkout&task=step5", 1);
         } else {
-            $cancel_return = JURI::root() . \JSHelper::SEFLink("index.php?option=com_jshopping&controller=checkout&task=step7&act=cancel&js_paymentclass=" . $pm_method->payment_class . '&order_id=' . $order->order_id, 1);
+            $cancel_return = $root_utl . \JSHelper::SEFLink("index.php?option=com_jshopping&controller=checkout&task=step7&act=cancel&js_paymentclass=" . $pm_method->payment_class . '&order_id=' . $order->order_id, 1);
         }
 
         if (!$pmconfigs['currency']) {
@@ -132,12 +131,25 @@ class pm_monopay extends PaymentRoot
             $currency = $this->getCurrency($pmconfigs['currency']);
         }
 
+        $request_json = $this->getJson($pmconfigs, $order, $currency, $notify_url, $success_url);
+        $result = $this->postRequest($pmconfigs, $order, $request_json);
+
+        if ($result->pageUrl) {
+            header('Location: ' . $result->pageUrl);
+        } elseif ($result->invoiceId) {
+            header('Location: https://pay.mbnk.biz/' . $result->invoiceId);
+        } else {
+            header('Location: ' . $cancel_return);
+        }
+    }
+
+    function getJson($pmconfigs, $order, $currency, $notify_url, $success_url) {
+        $jshopConfig = \JSFactory::getConfig();
+
         if ($pmconfigs['currency'] != $order->currency_code_iso) {
             $order->order_total = $order->order_total * $currency->currency_value / $order->currency_exchange;
         }
-
         $ccy = intval($currency->currency_code_num);
-
 
         $mono_args = array(
             "amount" => round($this->fixOrderTotal($order) * 100),
@@ -178,25 +190,25 @@ class pm_monopay extends PaymentRoot
         }
         $mono_args['merchantPaymInfo']['basketOrder'] = $basket_order;
 
-        $data = json_encode($mono_args, JSON_UNESCAPED_UNICODE);
+        return json_encode($mono_args, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    function postRequest($pmconfigs, $order, $request_json) {
+        $host = "https://api.monobank.ua/api/merchant/invoice/create";
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $host);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-type: application/json', 'X-Token: ' . $pmconfigs['secret']));
         curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $request_json);
         $result = json_decode(curl_exec($ch));
         if ($result->errCode != '' || $result->invoiceId == '') {
             \JSHelper::saveToLog("payment.log", "Status pending. Order ID " . $order->order_id . ". " . $result->errText);
         }
         curl_close($ch);
 
-        if ($result->pageUrl) {
-            header('Location: ' . $result->pageUrl);
-        } else {
-            header('Location: https://pay.mbnk.biz/' . $result->invoiceId);
-        }
+        return $result;
     }
 
     function getCurrency($currency_code_iso)
@@ -228,7 +240,6 @@ class pm_monopay extends PaymentRoot
         }
         return $total;
     }
-
 }
 
 ?>

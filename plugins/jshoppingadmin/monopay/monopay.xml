@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="plugin" version="3.0.0" method="upgrade" group="jshoppingadmin">
     <name>JoomShopping MonoPay</name>
-    <creationDate>6.11.2023</creationDate>
+    <creationDate>13.11.2023</creationDate>
     <author>Hvaekar</author>
     <authorEmail>hvaekar@gmail.com</authorEmail>
     <authorUrl>https://github.com/Hvaekar</authorUrl>
     <copyright></copyright>
     <license>Open Source License, GNU/GPL</license>
-    <version>2.0.0</version>	
+    <version>2.1.0</version>
     <description>monopay</description> 
     <files>
         <filename plugin="monopay">monopay.php</filename>
