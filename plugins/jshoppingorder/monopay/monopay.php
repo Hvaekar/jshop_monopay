@@ -102,8 +102,10 @@ class plgJshoppingOrderMonopay extends JPlugin
             }
         }
         curl_close($ch);
-        $comments .= _MONO.': '.$comment;
-        $include_comment = 0;
+        if (isset($comment)) {
+            $comments .= _MONO . ': ' . $comment;
+            $include_comment = 0;
+        }
     }
 
     private function getCurrentStatus($invoice_id, $secret)
